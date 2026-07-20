@@ -1,0 +1,8 @@
+# local run artifacts — not needed in the cloud
+run.log
+launchd.out.log
+launchd.err.log
+__pycache__/
+*.pyc
+com.giovanni.jobradar.plist
+job-market.code-workspace

@@ -56,8 +56,27 @@ EXCLUDE = [
     "custodian", "cleaner",
 ]
 
+# -----------------------------------------------------------------------------
+# Geography filter used by the Swiss section. A source carrying "locations"
+# keeps only postings whose location matches one of these strings (case-
+# insensitive substring). Sources WITHOUT a "locations" key stay unrestricted.
+# Geneva/Romandie terms come first, then the rest of Switzerland.
+# -----------------------------------------------------------------------------
+SWISS_LOCATIONS = [
+    # Geneva & French-speaking Switzerland (the priority)
+    "geneva", "genève", "geneve", "genf", "carouge", "nyon", "lancy",
+    "lausanne", "vaud", "montreux", "vevey", "fribourg", "neuchâtel", "neuchatel",
+    # German- & Italian-speaking Switzerland
+    "zurich", "zürich", "zug", "baar", "pfäffikon", "pfaffikon", "basel", "basle",
+    "bern", "berne", "winterthur", "lucerne", "luzern", "st. gallen", "lugano",
+    "schwyz", "vaduz",                     # Vaduz: LGT/Liechtenstein, same market
+    # country-level fallbacks (SmartRecruiters renders country as ", ch")
+    "switzerland", "suisse", "schweiz", ", ch",
+]
+
 # Order in which category sections appear on the dashboard.
 CATEGORY_ORDER = [
+    "Geneva / Swiss private finance",
     "International institutions",
     "Central banks",
     "Rating agencies",
@@ -78,6 +97,150 @@ CATEGORY_ORDER = [
 #      link      -> no API; a bookmark you open manually ("url")
 # -----------------------------------------------------------------------------
 SOURCES = [
+    # =======================================================================
+    #  GENEVA / SWISS PRIVATE FINANCE
+    #  Geneva-first, then the rest of Switzerland. Everything here carries
+    #  "locations": SWISS_LOCATIONS, so only Swiss postings surface even
+    #  though these firms advertise globally.
+    #
+    #  Reality check: most Geneva private banks and boutique managers run no
+    #  public jobs API (several don't even have a stable /careers path), and
+    #  much of this market is filled through network and referral rather than
+    #  open posting. The three API sources below are the ones that genuinely
+    #  resolve; the rest are bookmarks, and the aggregators at the end are
+    #  what actually catch the small houses.
+    # =======================================================================
+    # ---- scraped automatically (verified working) --------------------------
+    {"name": "Julius Baer (private bank)", "category": "Geneva / Swiss private finance",
+     "type": "workday", "profile": "finance", "locations": SWISS_LOCATIONS,
+     "host": "juliusbaer.wd3.myworkdayjobs.com", "tenant": "juliusbaer", "site": "External"},
+    {"name": "Vitol (Geneva — commodity trading)", "category": "Geneva / Swiss private finance",
+     "type": "smartrecruiters", "slug": "Vitol", "profile": "finance",
+     "locations": SWISS_LOCATIONS},
+    {"name": "Louis Dreyfus Company (Geneva — commodities)",
+     "category": "Geneva / Swiss private finance", "type": "smartrecruiters",
+     "slug": "LouisDreyfusCompany", "profile": "finance", "locations": SWISS_LOCATIONS},
+
+    # ---- Geneva private banks (bookmarks — no public API) ------------------
+    {"name": "Pictet (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.group.pictet/careers"},
+    {"name": "Lombard Odier (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.lombardodier.com/home/careers.html"},
+    {"name": "Union Bancaire Privée — UBP (Geneva)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.ubp.com/en/careers"},
+    {"name": "Mirabaud (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.mirabaud.com/en/careers"},
+    {"name": "Edmond de Rothschild (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.edmond-de-rothschild.com/en/careers"},
+    {"name": "Banque SYZ (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.syzgroup.com/en/careers"},
+    {"name": "CBH Compagnie Bancaire Helvétique (Geneva)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.cbhbank.com/en/careers"},
+    {"name": "Gonet & Cie (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.gonet.ch/en/careers/"},
+    {"name": "Piguet Galland (Geneva/Lausanne)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.piguetgalland.ch/en/careers"},
+    {"name": "Bordier & Cie (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.bordier.com/"},
+    {"name": "REYL Intesa Sanpaolo (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.reyl.com/"},
+    {"name": "Bank J. Safra Sarasin (Geneva/Basel)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.jsafrasarasin.com/"},
+    {"name": "Banque Cramer (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.banquecramer.ch/"},
+
+    # ---- Geneva asset managers / funds / multi-family offices --------------
+    {"name": "Unigestion (Geneva — quant multi-asset; strong PhD fit)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.unigestion.com/"},
+    {"name": "Quaero Capital (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.quaerocapital.com/"},
+    {"name": "Decalia (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://decalia.com/"},
+    {"name": "Stonehage Fleming (Geneva — family office)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.stonehagefleming.com/careers"},
+
+    # ---- Zurich / Zug / rest of Switzerland --------------------------------
+    {"name": "Vontobel (Zurich)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.vontobel.com/en/careers/"},
+    {"name": "EFG International (Zurich/Geneva)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.efginternational.com/"},
+    {"name": "GAM Investments (Zurich)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.gam.com/en/careers"},
+    {"name": "Bellevue Group (Zurich)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.bellevue.ch/"},
+    {"name": "Partners Group (Baar/Zug — private markets)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.partnersgroup.com/en/careers/"},
+    {"name": "LGT Capital Partners (Pfäffikon)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.lgt.com/global-en/career"},
+    {"name": "Swiss Re (Zurich — has a real economics team)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://careers.swissre.com/"},
+    {"name": "Zurich Insurance (Zurich — economics/risk)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.zurich.com/careers"},
+
+    # ---- Geneva commodity trading (macro/fundamental research desks) -------
+    #  Geneva is the world's commodity-trading hub; these desks hire macro
+    #  economists for supply/demand and price-fundamentals research.
+    {"name": "Trafigura (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.trafigura.com/careers/"},
+    {"name": "Gunvor (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://gunvorgroup.com/careers/"},
+    {"name": "Mercuria (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.mercuria.com/careers"},
+    {"name": "COFCO International (Geneva)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.cofcointernational.com/careers/"},
+    {"name": "Glencore (Baar)", "category": "Geneva / Swiss private finance",
+     "type": "link", "url": "https://www.glencore.com/careers"},
+
+    # ---- Geneva-based, finance-adjacent ------------------------------------
+    {"name": "World Economic Forum (Cologny/Geneva — economists)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.weforum.org/about/careers/"},
+    {"name": "Swiss Finance Institute (career centre)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.sfi.ch/"},
+
+    # ---- Aggregators: the realistic way to reach the SMALL houses ----------
+    #  Boutique Geneva managers rarely run a careers page; when they do post,
+    #  it lands on jobup (Romandie's board) or jobs.ch. These searches are the
+    #  highest-yield part of this whole section.
+    {"name": "jobup.ch — Geneva/Romandie board: 'economist'",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.jobup.ch/en/jobs/?term=economist"},
+    {"name": "jobup.ch — Geneva: 'analyst' (finance)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.jobup.ch/en/jobs/?term=analyst&location=Gen%C3%A8ve"},
+    {"name": "jobup.ch — Geneva: 'asset management'",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.jobup.ch/en/jobs/?term=asset%20management"},
+    {"name": "jobs.ch — Switzerland: 'economist'",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.jobs.ch/en/vacancies/?term=economist"},
+    {"name": "jobs.ch — Switzerland: 'quantitative research'",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.jobs.ch/en/vacancies/?term=quantitative%20research"},
+    {"name": "eFinancialCareers Switzerland (buy-side/private banking)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.efinancialcareers.ch/jobs-Switzerland.s001"},
+    {"name": "LinkedIn — Geneva: economist (newest first)",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.linkedin.com/jobs/search/?keywords=economist&location=Geneva%2C%20Switzerland&sortBy=DD"},
+    {"name": "LinkedIn — Geneva: quantitative / macro research",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.linkedin.com/jobs/search/?keywords=quantitative%20research%20macro&location=Geneva%2C%20Switzerland&sortBy=DD"},
+    {"name": "LinkedIn — Switzerland: portfolio / investment strategist",
+     "category": "Geneva / Swiss private finance", "type": "link",
+     "url": "https://www.linkedin.com/jobs/search/?keywords=investment%20strategist&location=Switzerland&sortBy=DD"},
+
     # ===================== International institutions ========================
     {"name": "IMF", "category": "International institutions", "type": "workday",
      "host": "imf.wd5.myworkdayjobs.com", "tenant": "imf", "site": "IMF"},

@@ -1,15 +1,20 @@
 name: Job Radar
 
+# Runs daily in GitHub's cloud (independent of your computer), emails the
+# digest, and publishes the dashboard to a public GitHub Pages URL.
 on:
   schedule:
-    - cron: "0 6 * * *"      # 06:00 UTC ≈ 08:00 Geneva
-  workflow_dispatch: {}
+    # 06:17 UTC ≈ 08:17 Geneva. Deliberately OFF the top-of-hour: GitHub drops
+    # far more :00 scheduled runs than off-peak minutes.
+    - cron: "17 6 * * *"
+  workflow_dispatch: {}       # also lets you run it on demand from the Actions tab
 
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: write             # to save the "already seen" list back to the repo
+  pages: write                # to publish the dashboard
+  id-token: write             # required by the Pages deploy action
 
+# Avoid overlapping runs.
 concurrency:
   group: job-radar
   cancel-in-progress: false
@@ -22,28 +27,35 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
       - name: Install dependency
         run: pip install requests
-      - name: Run Job Radar
+
+      - name: Run Job Radar (fetch + email)
         env:
-          JOBRADAR_APP_PW: ${{ secrets.JOBRADAR_APP_PW }}
+          JOBRADAR_APP_PW: ${{ secrets.JOBRADAR_APP_PW }}   # your Gmail app password
         run: python job_radar.py
-      - name: Save the seen list
+
+      - name: Save the "already seen" list back to the repo
         run: |
           git config user.name "job-radar-bot"
           git config user.email "job-radar-bot@users.noreply.github.com"
-          git add seen_jobs.csv
-          git commit -m "update seen jobs [skip ci]" || echo "nothing to commit"
+          git add seen_jobs.csv last_email.txt 2>/dev/null || git add seen_jobs.csv
+          git commit -m "update state [skip ci]" || echo "nothing to commit"
           git push || echo "nothing to push"
-      - name: Assemble site
+
+      - name: Assemble the public site
         run: |
           mkdir -p site
           cp jobs.html site/index.html
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
+
       - id: deploy
         uses: actions/deploy-pages@v4

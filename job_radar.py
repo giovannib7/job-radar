@@ -26,8 +26,9 @@ import config                  # your settings from config.py
 
 # --- where files live: always next to this script, regardless of where it's run
 HERE      = os.path.dirname(os.path.abspath(__file__))
-SEEN_CSV  = os.path.join(HERE, "seen_jobs.csv")   # ledger of everything seen
-HTML_OUT  = os.path.join(HERE, "jobs.html")       # the dashboard you open
+SEEN_CSV   = os.path.join(HERE, "seen_jobs.csv")   # ledger of everything seen
+HTML_OUT   = os.path.join(HERE, "jobs.html")       # the dashboard you open
+LAST_EMAIL = os.path.join(HERE, "last_email.txt")  # date we last emailed (once/day)
 
 # A polite browser-like header so servers don't reject us.
 HEADERS = {"User-Agent": "Mozilla/5.0 (job_radar personal job monitor)"}
@@ -197,6 +198,18 @@ def is_relevant(title, profile):
     return any(good.lower() in t for good in include)
 
 
+def in_locations(location, wanted):
+    # Optional per-source geography filter. A source with no "locations" key is
+    # unrestricted (so every pre-existing source behaves exactly as before).
+    # Postings with a blank location are KEPT: better a stray row than a miss.
+    if not wanted:
+        return True
+    loc = (location or "").lower()
+    if not loc.strip():
+        return True
+    return any(w.lower() in loc for w in wanted)
+
+
 # =============================================================================
 # LEDGER  (the "already seen" memory, stored as a CSV)
 # =============================================================================
@@ -338,6 +351,11 @@ def send_email(new_jobs):
         return
     if cfg.get("ONLY_WHEN_NEW") and not new_jobs:
         return
+    # Only one email per day, even if the workflow runs twice (backup schedule).
+    today = dt.date.today().isoformat()
+    if os.path.exists(LAST_EMAIL) and open(LAST_EMAIL).read().strip() == today:
+        print("  already emailed today — skipping duplicate")
+        return
     # Group the new jobs by category, in the configured order.
     cats = sorted({j.get("category", "Other") for j in new_jobs},
                   key=_category_order)
@@ -381,6 +399,8 @@ def send_email(new_jobs):
         s.starttls()
         s.login(cfg["FROM"], app_pw)
         s.sendmail(cfg["FROM"], recipients, msg.as_string())
+    with open(LAST_EMAIL, "w") as f:          # record that we emailed today
+        f.write(today)
     print(f"  emailed digest to {', '.join(recipients)}")
 
 
@@ -403,7 +423,10 @@ def main():
         try:
             jobs = fetcher(src)
             profile = src.get("profile", "core")
-            kept = [j for j in jobs if is_relevant(j["title"], profile)]
+            wanted_locs = src.get("locations")
+            kept = [j for j in jobs
+                    if is_relevant(j["title"], profile)
+                    and in_locations(j.get("location"), wanted_locs)]
             for j in kept:                    # tag with its category for grouping
                 j["category"] = src.get("category", "Other")
             all_jobs.extend(kept)
